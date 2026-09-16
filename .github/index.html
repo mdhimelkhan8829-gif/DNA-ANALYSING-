@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA শনাক্তকরণ ব্যবস্থা | সেভ পিপুল</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e12;
+    --panel:#121820;
+    --panel-2:#171f28;
+    --border:#243040;
+    --border-soft:#1c2632;
+    --text:#e9e6dc;
+    --text-dim:#8ea0ac;
+    --accent:#33c6a4;
+    --accent-soft:rgba(51,198,164,0.12);
+    --accent-strong:#4fe0bb;
+    --warn:#d9a441;
+    --warn-soft:rgba(217,164,65,0.12);
+    --danger:#e2574c;
+    --danger-soft:rgba(226,87,76,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans Bengali','Space Grotesk',sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(51,198,164,0.08), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(51,198,164,0.05), transparent 60%);
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px;}
+
+  /* ---------- Header / brand ---------- */
+  header{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:30px;}
+  .helix{width:64px;height:64px;display:block;}
+  .brand-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    color:var(--accent);
+    margin-top:8px;
+    font-weight:600;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    margin:18px 0 6px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .h1-sub{
+    color:var(--text-dim);
+    font-size:14px;
+    max-width:480px;
+    margin:0 auto;
+  }
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px 18px;
+    margin-bottom:20px;
+  }
+  .panel-title{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:14px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .panel-title h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px;
+    margin:0;
+    color:var(--text);
+  }
+  .panel-title .count-pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-dim);
+    background:var(--panel-2);
+    border:1px solid var(--border-soft);
+    padding:3px 10px;
+    border-radius:20px;
+  }
+
+  /* ---------- Locus grid ---------- */
+  .locus-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+  }
+  @media(min-width:520px){
+    .locus-grid{grid-template-columns:repeat(3,1fr);}
+  }
+  .locus-cell{
+    background:var(--panel-2);
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    padding:9px 10px;
+  }
+  .locus-cell label{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-dim);
+    letter-spacing:0.04em;
+    margin-bottom:6px;
+  }
+  .allele-pair{display:flex;gap:6px;}
+  .allele-pair input{
+    width:100%;
+    min-width:0;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:5px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:13.5px;
+    padding:6px 4px;
+    text-align:center;
+  }
+  .allele-pair input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px var(--accent-soft);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+  button{
+    font-family:'Noto Sans Bengali','Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    border-radius:8px;
+    padding:11px 18px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform 0.08s ease, filter 0.15s ease;
+  }
+  button:active{transform:scale(0.98);}
+  .btn-primary{
+    background:var(--accent);
+    color:#06231c;
+    flex:1 1 auto;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-clear{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--danger);
+  }
+
+  /* ---------- Result area ---------- */
+  #result-area{display:none;}
+  .result-card{
+    border-radius:10px;
+    padding:18px;
+    border:1px solid var(--border);
+    margin-bottom:12px;
+  }
+  .result-card.match{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+  }
+  .result-card.partial{
+    background:var(--warn-soft);
+    border-color:var(--warn);
+  }
+  .result-card.none{
+    background:var(--danger-soft);
+    border-color:var(--danger);
+  }
+  .result-status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:20px;
+  }
+  .result-status.match{background:var(--accent);color:#06231c;}
+  .result-status.partial{background:var(--warn);color:#241a04;}
+  .result-status.none{background:var(--danger);color:#2a0a07;}
+  .result-name{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:4px 0 2px;}
+  .result-meta{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);}
+  .result-score{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    margin-top:10px;
+    color:var(--text);
+  }
+  .score-bar-track{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    height:8px;
+    margin-top:6px;
+    overflow:hidden;
+  }
+  .score-bar-fill{height:100%;border-radius:6px;}
+
+  .candidate-list{margin-top:6px;}
+  .candidate-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 4px;
+    border-bottom:1px solid var(--border-soft);
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+  }
+  .candidate-row:last-child{border-bottom:none;}
+  .candidate-row .cname{font-family:'Noto Sans Bengali',sans-serif;color:var(--text);}
+  .candidate-row .cscore{color:var(--text-dim);}
+
+  /* ---------- Footer ---------- */
+  footer{
+    margin-top:30px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:12px;
+    font-family:'JetBrains Mono',monospace;
+    line-height:1.7;
+  }
+  footer .disclaimer{
+    max-width:520px;
+    margin:10px auto 0;
+    color:var(--text-dim);
+    font-family:'Noto Sans Bengali',sans-serif;
+    font-size:12.5px;
+  }
+  .hint{
+    font-family:'Noto Sans Bengali',sans-serif;
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg class="helix" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4fe0bb"/>
+          <stop offset="1" stop-color="#1f8f76"/>
+        </linearGradient>
+      </defs>
+      <path d="M16 4 C 30 16, 34 16, 48 4 M16 60 C 30 48, 34 48, 48 60" stroke="url(#g1)" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M16 4 C 2 16, 2 48, 16 60 M48 4 C 62 16, 62 48, 48 60" stroke="url(#g1)" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.55"/>
+      <line x1="19" y1="15" x2="45" y2="15" stroke="#4fe0bb" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="16.5" y1="24" x2="47.5" y2="24" stroke="#4fe0bb" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="19" y1="49" x2="45" y2="49" stroke="#4fe0bb" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="16.5" y1="40" x2="47.5" y2="40" stroke="#4fe0bb" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <div class="brand-tag">সেভ পিপুল</div>
+    <h1>DNA শনাক্তকরণ ব্যবস্থা</h1>
+    <p class="h1-sub">Forensic STR DNA Profile Matching Console — অপরাধস্থলের ডিএনএ প্রোফাইলের সাথে সংরক্ষিত নাগরিক প্রোফাইল মিলিয়ে সন্দেহভাজন শনাক্ত করুন।</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">
+      <h2>অপরাধস্থলের DNA প্রোফাইল (Crime Scene STR Profile)</h2>
+      <span class="count-pill" id="db-count-pill"></span>
+    </div>
+    <p class="hint">প্রতিটি লোকাসে দুটি অ্যালিল সংখ্যা দিন। যত বেশি লোকাসের তথ্য দেবেন, ফলাফল তত নির্ভুল হবে (কমপক্ষে ৮টি লোকাস পূরণের পরামর্শ দেওয়া হয়)।</p>
+    <div class="locus-grid" id="locus-grid"></div>
+    <div class="btn-row">
+      <button class="btn-primary" id="search-btn">🔍 মিলিয়ে দেখুন</button>
+      <button class="btn-ghost" id="example-match-btn">উদাহরণ (মিল)</button>
+      <button class="btn-ghost" id="example-nomatch-btn">উদাহরণ (অমিল)</button>
+      <button class="btn-clear" id="clear-btn">মুছুন</button>
+    </div>
+  </div>
+
+  <div id="result-area"></div>
+
+  <footer>
+    <div id="footer-stats"></div>
+    <p class="disclaimer">⚠️ এটি একটি ডেমো/শিক্ষামূলক অ্যাপ্লিকেশন। এখানে ব্যবহৃত সব নাম ও DNA STR প্রোফাইল সম্পূর্ণ কাল্পনিক — বাস্তব কোনো ব্যক্তির তথ্য নয়। প্রকৃত ফরেনসিক তদন্তের জন্য অনুমোদিত ল্যাব ও কর্তৃপক্ষের সহায়তা নিন।</p>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   13 CODIS core STR loci used for the demo profiles
+========================================================= */
+const LOCI = [
+  "CSF1PO","FGA","TH01","TPOX","VWA",
+  "D3S1358","D5S818","D7S820","D8S1179",
+  "D13S317","D16S539","D18S51","D21S11"
+];
+
+/* =========================================================
+   Pre-loaded citizen database (FICTIONAL demo data only)
+   Each profile: 13 loci, each an [allele1, allele2] pair
+========================================================= */
+const CITIZENS = [
+  { id:"NID-100234", name:"রফিকুল ইসলাম", profile:{
+    CSF1PO:[11,12], FGA:[21,24], TH01:[6,9], TPOX:[8,11], VWA:[16,18],
+    D3S1358:[15,17], D5S818:[11,12], D7S820:[8,10], D8S1179:[13,14],
+    D13S317:[9,11], D16S539:[11,12], D18S51:[14,16], D21S11:[29,30]
+  }},
+  { id:"NID-100567", name:"আব্দুল করিম", profile:{
+    CSF1PO:[10,11], FGA:[20,23], TH01:[7,9.3], TPOX:[9,9], VWA:[15,17],
+    D3S1358:[14,16], D5S818:[10,13], D7S820:[9,11], D8S1179:[12,13],
+    D13S317:[8,12], D16S539:[10,13], D18S51:[13,17], D21S11:[28,31]
+  }},
+  { id:"NID-100812", name:"জসিম উদ্দিন", profile:{
+    CSF1PO:[12,12], FGA:[22,25], TH01:[6,7], TPOX:[8,10], VWA:[17,19],
+    D3S1358:[16,18], D5S818:[11,11], D7S820:[10,12], D8S1179:[14,15],
+    D13S317:[10,10], D16S539:[9,12], D18S51:[15,15], D21S11:[30,32]
+  }},
+  { id:"NID-101045", name:"হাবিবুর রহমান", profile:{
+    CSF1PO:[9,11], FGA:[19,22], TH01:[8,9], TPOX:[10,11], VWA:[14,16],
+    D3S1358:[13,15], D5S818:[12,14], D7S820:[8,9], D8S1179:[11,13],
+    D13S317:[9,13], D16S539:[11,11], D18S51:[16,18], D21S11:[27,29]
+  }},
+  { id:"NID-101298", name:"সালমা বেগম", profile:{
+    CSF1PO:[10,12], FGA:[23,24], TH01:[6,8], TPOX:[8,9], VWA:[16,17],
+    D3S1358:[14,17], D5S818:[11,13], D7S820:[9,10], D8S1179:[12,15],
+    D13S317:[8,11], D16S539:[12,13], D18S51:[14,17], D21S11:[29,31]
+  }},
+  { id:"NID-101532", name:"নুসরাত জাহান", profile:{
+    CSF1PO:[11,13], FGA:[21,26], TH01:[7,7], TPOX:[9,10], VWA:[15,19],
+    D3S1358:[15,18], D5S818:[10,12], D7S820:[11,12], D8S1179:[13,16],
+    D13S317:[11,12], D16S539:[10,11], D18S51:[15,19], D21S11:[28,30]
+  }},
+  { id:"NID-101765", name:"মমতাজ আলী", profile:{
+    CSF1PO:[9,10], FGA:[20,20], TH01:[9,9.3], TPOX:[8,8], VWA:[14,18],
+    D3S1358:[13,16], D5S818:[13,13], D7S820:[8,11], D8S1179:[11,14],
+    D13S317:[9,9], D16S539:[9,13], D18S51:[13,16], D21S11:[27,32]
+  }},
+  { id:"NID-101998", name:"শফিকুল আলম", profile:{
+    CSF1PO:[12,13], FGA:[24,25], TH01:[6,9], TPOX:[10,10], VWA:[17,17],
+    D3S1358:[16,17], D5S818:[12,12], D7S820:[10,10], D8S1179:[14,16],
+    D13S317:[10,11], D16S539:[12,12], D18S51:[16,19], D21S11:[30,33]
+  }}
+];
+
+/* =========================================================
+   Build the locus input grid
+========================================================= */
+const grid = document.getElementById('locus-grid');
+LOCI.forEach(locus=>{
+  const cell = document.createElement('div');
+  cell.className = 'locus-cell';
+  cell.innerHTML = `
+    <label>${locus}</label>
+    <div class="allele-pair">
+      <input type="text" inputmode="decimal" data-locus="${locus}" data-slot="0" placeholder="—" maxlength="5">
+      <input type="text" inputmode="decimal" data-locus="${locus}" data-slot="1" placeholder="—" maxlength="5">
+    </div>`;
+  grid.appendChild(cell);
+});
+
+document.getElementById('db-count-pill').textContent = CITIZENS.length + " জন নাগরিক প্রোফাইল সংরক্ষিত";
+document.getElementById('footer-stats').textContent = "ডেটাবেসে মোট " + CITIZENS.length + "টি DNA STR প্রোফাইল রয়েছে · " + LOCI.length + "টি CODIS কোর লোকাস ব্যবহৃত";
+
+/* =========================================================
+   Helpers
+========================================================= */
+function readCrimeSceneProfile(){
+  const profile = {};
+  LOCI.forEach(locus=>{
+    const a = document.querySelector(`input[data-locus="${locus}"][data-slot="0"]`).value.trim();
+    const b = document.querySelector(`input[data-locus="${locus}"][data-slot="1"]`).value.trim();
+    if(a !== "" && b !== ""){
+      profile[locus] = [parseFloat(a), parseFloat(b)];
+    }
+  });
+  return profile;
+}
+
+function allelesEqual(pairA, pairB){
+  const a = [...pairA].sort((x,y)=>x-y);
+  const b = [...pairB].sort((x,y)=>x-y);
+  return a[0]===b[0] && a[1]===b[1];
+}
+
+function scoreAgainst(crimeProfile, citizenProfile){
+  const loci = Object.keys(crimeProfile);
+  if(loci.length === 0) return { compared:0, matched:0, ratio:0 };
+  let matched = 0;
+  loci.forEach(locus=>{
+    if(citizenProfile[locus] && allelesEqual(crimeProfile[locus], citizenProfile[locus])){
+      matched++;
+    }
+  });
+  return { compared: loci.length, matched, ratio: matched / loci.length };
+}
+
+function fillProfile(profile){
+  LOCI.forEach(locus=>{
+    const pair = profile[locus];
+    document.querySelector(`input[data-locus="${locus}"][data-slot="0"]`).value = pair ? pair[0] : "";
+    document.querySelector(`input[data-locus="${locus}"][data-slot="1"]`).value = pair ? pair[1] : "";
+  });
+}
+
+function clearProfile(){
+  document.querySelectorAll('.locus-cell input').forEach(inp=> inp.value = "");
+  document.getElementById('result-area').style.display = 'none';
+}
+
+/* =========================================================
+   Matching + rendering
+========================================================= */
+function runSearch(){
+  const crimeProfile = readCrimeSceneProfile();
+  const compared = Object.keys(crimeProfile).length;
+  const resultArea = document.getElementById('result-area');
+  resultArea.style.display = 'block';
+
+  if(compared < 3){
+    resultArea.innerHTML = `
+      <div class="result-card none">
+        <span class="result-status none">তথ্য অপর্যাপ্ত</span>
+        <div class="result-name">অন্তত ৩টি লোকাসের তথ্য দিন</div>
+        <div class="result-meta">নির্ভরযোগ্য ফলাফলের জন্য কমপক্ষে ৮টি লোকাস পূরণ করার পরামর্শ দেওয়া হচ্ছে।</div>
+      </div>`;
+    return;
+  }
+
+  const ranked = CITIZENS.map(c => ({ citizen:c, ...scoreAgainst(crimeProfile, c.profile) }))
+                          .sort((a,b)=> b.ratio - a.ratio);
+
+  const top = ranked[0];
+  const pct = Math.round(top.ratio * 100);
+
+  let statusClass, statusLabel, headline;
+  if(top.ratio === 1 && top.compared >= 8){
+    statusClass = 'match';
+    statusLabel = '✅ শনাক্ত সম্পন্ন — সম্পূর্ণ মিল';
+    headline = top.citizen.name;
+  } else if(top.ratio >= 0.7){
+    statusClass = 'partial';
+    statusLabel = '⚠️ আংশিক মিল — অতিরিক্ত যাচাই প্রয়োজন';
+    headline = top.citizen.name + " (সম্ভাব্য)";
+  } else {
+    statusClass = 'none';
+    statusLabel = '❌ কোনো নিশ্চিত মিল পাওয়া যায়নি';
+    headline = "নিকটতম প্রোফাইল: " + top.citizen.name;
+  }
+
+  const barColor = statusClass === 'match' ? 'var(--accent)' : statusClass === 'partial' ? 'var(--warn)' : 'var(--danger)';
+
+  let html = `
+    <div class="result-card ${statusClass}">
+      <span class="result-status ${statusClass}">${statusLabel}</span>
+      <div class="result-name">${headline}</div>
+      <div class="result-meta">জাতীয় পরিচয় নম্বর: ${top.citizen.id}</div>
+      <div class="result-score">লোকাস মিল: ${top.matched} / ${top.compared} &nbsp;(${pct}%)</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
+    </div>
+  `;
+
+  if(ranked.length > 1){
+    html += `<div class="panel"><div class="panel-title"><h2>অন্যান্য নিকটতম প্রোফাইল</h2></div><div class="candidate-list">`;
+    ranked.slice(1,5).forEach(r=>{
+      html += `<div class="candidate-row"><span class="cname">${r.citizen.name} · ${r.citizen.id}</span><span class="cscore">${r.matched}/${r.compared} (${Math.round(r.ratio*100)}%)</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  resultArea.innerHTML = html;
+}
+
+/* =========================================================
+   Event bindings
+========================================================= */
+document.getElementById('search-btn').addEventListener('click', runSearch);
+document.getElementById('clear-btn').addEventListener('click', clearProfile);
+document.getElementById('example-match-btn').addEventListener('click', ()=>{
+  fillProfile(CITIZENS[2].profile); // Jasim Uddin — exact match demo
+});
+document.getElementById('example-nomatch-btn').addEventListener('click', ()=>{
+  fillProfile({
+    CSF1PO:[7,8], FGA:[18,18], TH01:[5,5], TPOX:[7,7], VWA:[12,13],
+    D3S1358:[11,12], D5S818:[9,9], D7S820:[7,7], D8S1179:[9,10],
+    D13S317:[7,7], D16S539:[8,8], D18S51:[11,12], D21S11:[24,25]
+  });
+});
+</script>
+</body>
+</html>
